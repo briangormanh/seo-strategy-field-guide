@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategy Approach — Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --sand-50: #faf9f6;
+    --sand-100: #f3f1eb;
+    --sand-200: #e8e4d9;
+    --sand-300: #d4cfc0;
+    --ink-700: #2c2a25;
+    --ink-600: #3d3a33;
+    --ink-500: #5c5850;
+    --ink-400: #7a756b;
+    --ink-300: #9e998f;
+    --topo-line: rgba(180, 173, 158, 0.25);
+    --accent-rust: #b85c38;
+    --accent-rust-light: #d4815f;
+    --accent-forest: #4a6741;
+    --accent-slate: #546a7b;
+    --accent-ochre: #c49a3a;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'Instrument Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --step-line-width: 2px;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--sand-50);
+    color: var(--ink-700);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Topographic background texture ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      repeating-conic-gradient(
+        from 0deg at 50% 50%,
+        transparent 0deg,
+        transparent 89deg,
+        var(--topo-line) 89deg,
+        var(--topo-line) 91deg,
+        transparent 91deg
+      );
+    opacity: 0.08;
+    background-size: 200px 200px;
+  }
+
+  /* ─── Grain overlay ─── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+
+  /* ─── Header ─── */
+  .guide-header {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3.5rem 2rem 2rem;
+    text-align: center;
+  }
+
+  .guide-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-400);
+    border: 1px solid var(--sand-300);
+    padding: 0.35rem 1rem;
+    border-radius: 100px;
+    margin-bottom: 1.5rem;
+    background: var(--sand-100);
+  }
+
+  .guide-badge svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--ink-400);
+  }
+
+  .guide-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 5vw, 3.4rem);
+    font-weight: 400;
+    line-height: 1.15;
+    color: var(--ink-700);
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.01em;
+  }
+
+  .guide-subtitle {
+    font-size: 1.05rem;
+    color: var(--ink-400);
+    max-width: 520px;
+    margin: 0 auto 1.5rem;
+    line-height: 1.55;
+  }
+
+  .guide-rule {
+    width: 60px;
+    height: 2px;
+    background: var(--accent-rust);
+    border: none;
+    margin: 0 auto;
+    border-radius: 2px;
+  }
+
+  /* ─── Approach intro ─── */
+  .approach-intro {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 2.5rem auto 1rem;
+    padding: 0 2rem;
+    text-align: center;
+  }
+
+  .approach-intro p {
+    font-size: 0.95rem;
+    color: var(--ink-500);
+    line-height: 1.7;
+  }
+
+  .approach-intro strong {
+    color: var(--ink-700);
+    font-weight: 600;
+  }
+
+  /* ─── Descent track ─── */
+  .descent-track {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 2rem 4rem;
+  }
+
+  .descent-track::before {
+    content: '';
+    position: absolute;
+    left: calc(2rem + 27px);
+    top: 2rem;
+    bottom: 4rem;
+    width: var(--step-line-width);
+    background: repeating-linear-gradient(
+      to bottom,
+      var(--sand-300) 0px,
+      var(--sand-300) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+  }
+
+  @media (max-width: 640px) {
+    .descent-track::before {
+      left: calc(1rem + 27px);
+    }
+    .descent-track { padding-left: 1rem; padding-right: 1rem; }
+    .guide-header { padding-left: 1rem; padding-right: 1rem; }
+    .approach-intro { padding-left: 1rem; padding-right: 1rem; }
+  }
+
+  /* ─── Step card ─── */
+  .step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .step:nth-child(1) { animation-delay: 0.05s; }
+  .step:nth-child(2) { animation-delay: 0.1s; }
+  .step:nth-child(3) { animation-delay: 0.15s; }
+  .step:nth-child(4) { animation-delay: 0.2s; }
+  .step:nth-child(5) { animation-delay: 0.25s; }
+  .step:nth-child(6) { animation-delay: 0.3s; }
+  .step:nth-child(7) { animation-delay: 0.35s; }
+  .step:nth-child(8) { animation-delay: 0.4s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Altitude marker */
+  .step-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1.5rem;
+  }
+
+  .step-number {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    color: white;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 0 0 4px var(--sand-50);
+  }
+
+  .step-altitude {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--ink-300);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    margin-top: 0.75rem;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  /* Card */
+  .step-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.75rem 2rem;
+    border: 1px solid var(--sand-200);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03), 0 6px 16px rgba(0,0,0,0.02);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .step-card:hover {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05), 0 12px 28px rgba(0,0,0,0.04);
+    border-color: var(--sand-300);
+  }
+
+  .step-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
+  .step-heading {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--ink-700);
+    margin-bottom: 0.5rem;
+  }
+
+  .step-desc {
+    font-size: 0.88rem;
+    color: var(--ink-500);
+    line-height: 1.6;
+    margin-bottom: 1.15rem;
+  }
+
+  /* Checkpoint list */
+  .checkpoints {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .checkpoints li {
+    font-size: 0.84rem;
+    color: var(--ink-600);
+    line-height: 1.55;
+    padding-left: 1.5rem;
+    position: relative;
+  }
+
+  .checkpoints li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    border: 1.5px solid var(--sand-300);
+    background: var(--sand-50);
+  }
+
+  .checkpoints li strong {
+    font-weight: 600;
+    color: var(--ink-700);
+  }
+
+  /* Sub-sections within a card */
+  .sub-section {
+    margin-top: 1.15rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--sand-100);
+  }
+
+  .sub-section-title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-400);
+    margin-bottom: 0.6rem;
+  }
+
+  /* Conditional badge */
+  .condition-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-ochre);
+    background: rgba(196, 154, 58, 0.08);
+    border: 1px solid rgba(196, 154, 58, 0.2);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Callout box */
+  .callout {
+    background: var(--sand-100);
+    border-left: 3px solid var(--accent-rust);
+    border-radius: 0 6px 6px 0;
+    padding: 0.75rem 1rem;
+    margin-top: 1rem;
+    font-size: 0.82rem;
+    color: var(--ink-500);
+    line-height: 1.55;
+  }
+
+  .callout strong {
+    color: var(--ink-700);
+    font-weight: 600;
+  }
+
+  /* ─── Color coding per altitude ─── */
+  .step--snapshot .step-number { background: var(--accent-rust); }
+  .step--snapshot .step-label { color: var(--accent-rust); }
+
+  .step--homepage .step-number { background: var(--accent-rust-light); }
+  .step--homepage .step-label { color: var(--accent-rust-light); }
+
+  .step--nav .step-number { background: #8a6e4e; }
+  .step--nav .step-label { color: #8a6e4e; }
+
+  .step--layouts .step-number { background: var(--accent-forest); }
+  .step--layouts .step-label { color: var(--accent-forest); }
+
+  .step--blog .step-number { background: var(--accent-slate); }
+  .step--blog .step-label { color: var(--accent-slate); }
+
+  .step--gbp .step-number { background: var(--accent-ochre); }
+  .step--gbp .step-label { color: var(--accent-ochre); }
+
+  .step--backlinks .step-number { background: #6b5b8a; }
+  .step--backlinks .step-label { color: #6b5b8a; }
+
+  .step--northstar .step-number { background: var(--ink-600); }
+  .step--northstar .step-label { color: var(--ink-600); }
+
+  /* ─── Footer ─── */
+  .guide-footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 1rem 2rem 3rem;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .guide-footer p {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-300);
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 640px) {
+    .step { grid-template-columns: 44px 1fr; gap: 0.75rem; }
+    .step-number { width: 44px; height: 44px; font-size: 1rem; }
+    .step-card { padding: 1.25rem 1.25rem; }
+    .step-heading { font-size: 1.25rem; }
+    .step-altitude { font-size: 0.55rem; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ─── Header ─── -->
+  <header class="guide-header">
+    <div class="guide-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+      Sixth City — Field Guide
+    </div>
+    <h1 class="guide-title">Strategy Approach</h1>
+    <p class="guide-subtitle">Start at a thousand feet. Work your way down. Each step builds context for the next.</p>
+    <hr class="guide-rule">
+  </header>
+
+  <div class="approach-intro">
+    <p><strong>The idea is simple:</strong> don't start in the weeds. Begin with who the client is and what they need, then zoom in — site structure, page quality, content, links, competition. By the time you're deep in the details, you'll have the full picture.</p>
+  </div>
+
+  <!-- ─── Descent Track ─── -->
+  <main class="descent-track">
+
+    <!-- 1. Business Snapshot -->
+    <section class="step step--snapshot">
+      <div class="step-marker">
+        <div class="step-number">1</div>
+        <span class="step-altitude">30,000 ft</span>
+      </div>
+      <div class="step-card">
+        <div class="step-label">Foundation</div>
+        <h2 class="step-heading">Business Snapshot</h2>
+        <p class="step-desc">First thing after the kickoff call. Create the client's context folder and distill everything you know into a snapshot. This is the lens for every decision that follows.</p>
+        <ul class="checkpoints">
+          <li><strong>Business basics</strong> — what they do, where, how long, size/scale</li>
+          <li><strong>Audience segments</strong> — who they serve, what those people care about</li>
+          <li><strong>Core services</strong> — the things that make them money</li>
+          <li><strong>Differentiators</strong> — why someone picks them over a competitor</li>
+          <li><strong>Competitors</strong> — who they see as competition (and who actually is)</li>
+          <li><strong>Current pain points</strong> — what prompted them to seek help</li>
+        </ul>
+        <div class="callout">
+          <strong>Set up the context folder first.</strong> Everything downstream — page reviews, content ideas, link targets — maps back to this snapshot.
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Homepage -->
+    <section class="step step--homepage">
+      <div class="step-marker">
+        <div class="step-number">2</div>
+        <span class="step-altitude">20,000 ft</span>
+      </div>
+      <div class="step-card">
+        <div class="step-label">First impression</div>
+        <h2 class="step-heading">Homepage</h2>
+        <p class="step-desc">The homepage is the front door. Someone lands here and within seconds decides whether to stay. Look at it as a first-time visitor, not as an SEO.</p>
+        <ul class="checkpoints">
+          <li><strong>Information</strong> — can you tell what the business does, who it's for, and where?</li>
+          <li><strong>Trust above the fold</strong> — proof points, logos, reviews, awards visible without scrolling</li>
+          <li><strong>Conversion setup</strong> — hero with CTAs on the left, form or image on the right</li>
+          <li><strong>Site sections</strong> — does the homepage preview the key areas (services, about, proof)?</li>
+          <li><strong>Clarity over cleverness</strong> — is the H1 descriptive or vague?</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 3. Main Navigation -->
+    <section class="step step--nav">
+      <div class="step-marker">
+        <div class="step-number">3</div>
+        <span class="step-altitude">15,000 ft</span>
+      </div>
+      <div class="step-card">
+        <div class="step-label">Site structure</div>
+        <h2 class="step-heading">Main Navigation</h2>
+        <p class="step-desc">The nav tells users and search engines what matters most. It should mirror the key services and sections — nothing more, nothing less.</p>
+        <ul class="checkpoints">
+          <li><strong>Reflects core services</strong> — every money-making service should be reachable from the nav</li>
+          <li><strong>Logical grouping</strong> — dropdowns that make sense, not kitchen-sink menus</li>
+          <li><strong>No orphans</strong> — important pages shouldn't be buried 3+ clicks deep</li>
+          <li><strong>Label clarity</strong> — can a stranger understand each link without context?</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 4. Page Layouts -->
+    <section class="step step--layouts">
+      <div class="step-marker">
+        <div class="step-number">4</div>
+        <span class="step-altitude">8,000 ft</span>
+      </div>
+      <div class="step-card">
+        <div class="step-label">Going deeper</div>
+        <h2 class="step-heading">Page Layouts</h2>
+        <p class="step-desc">Now you're inside the key pages — homepage, service pages, industry pages, auxiliary pages. Look at how each one is built.</p>
+
+        <div class="sub-section">
+          <div class="sub-section-title">Hero Sections</div>
+          <ul class="checkpoints">
+            <li><strong>Left side</strong> — H1, supporting description, CTA buttons, proof points / trust signals</li>
+            <li><strong>Right side</strong> — relevant image or contact form</li>
+            <li><strong>Impact</strong> — does it immediately communicate value and invite action?</li>
+          </ul>
+        </div>
+
+        <div class="sub-section">
+          <div class="sub-section-title">Page Templates</div>
+          <ul class="checkpoints">
+            <li><strong>Section order</strong> — are subsections in an effective sequence? (problem → solution → proof → CTA)</li>
+            <li><strong>Content quality</strong> — does each section earn its place, or is there filler?</li>
+            <li><strong>Consistency</strong> — do similar pages follow a consistent template?</li>
+          </ul>
+        </div>
+
+        <div class="sub-section">
+          <div class="sub-section-title">Copywriting</div>
+          <ul class="checkpoints">
+            <li><strong>Audience-first</strong> — does it speak to the reader's problems and goals?</li>
+            <li><strong>Keyword signals</strong> — natural keyword use in headings, body, and meta?</li>
+            <li><strong>Specificity</strong> — concrete details over vague claims?</li>
+          </ul>
+        </div>
+
+        <div class="sub-section">
+          <div class="sub-section-title">Internal Links</div>
+          <ul class="checkpoints">
+            <li><strong>Structural links</strong> — nav, footer, sidebar, breadcrumbs all connecting key pages</li>
+            <li><strong>Contextual links</strong> — in-content links with descriptive anchor text (not "click here")</li>
+            <li><strong>Money page flow</strong> — do supporting pages link to the pages that convert?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Blog -->
+    <section class="step step--blog">
+      <div class="step-marker">
+        <div class="step-number">5</div>
+        <span class="step-altitude">4,000 ft</span>
+      </div>
+      <div class="step-card">
+        <div class="step-label">Content</div>
+        <h2 class="step-heading">Blog</h2>
+        <p class="step-desc">The blog isn't a news feed — every post should serve a strategic purpose. Map each topic to who it's for, where they are in the funnel, and which money page it supports.</p>
+        <ul class="checkpoints">
+          <li><strong>Audience segment</strong> — who is this post written for?</li>
+          <li><strong>Awareness stage</strong> — TOFU (problem-aware), MOFU (solution-aware), BOFU (decision-ready)?</li>
+          <li><strong>Money page connection</strong> — does this post link to and support a service page?</li>
+          <li><strong>Topic specificity</strong> — is it targeted enough to attract the right people?</li>
+        </ul>
+        <div class="callout">
+          <strong>Watch for generic topics.</strong> "What is AI?" attracts everyone and no one. "How AI is changing [specific industry]" attracts the right audience. Specificity wins.
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. GBP -->
+    <section class="step step--gbp">
+      <div class="step-marker">
+        <div class="step-number">6</div>
+        <span class="step-altitude">2,000 ft</span>
+      </div>
+      <div class="step-card">
+        <div class="condition-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Local businesses only
+        </div>
+        <div class="step-label">Local presence</div>
+        <h2 class="step-heading">Google Business Profile</h2>
+        <p class="step-desc">For local clients, the GBP is often their most visible asset. It needs to be complete, accurate, and actively maintained.</p>
+        <ul class="checkpoints">
+          <li><strong>Completeness</strong> — all fields filled, correct categories, service areas</li>
+          <li><strong>Reviews</strong> — volume, recency, average rating, response rate</li>
+          <li><strong>Posts & updates</strong> — are they using posts? How often?</li>
+          <li><strong>Q&A</strong> — are common questions answered, or is it empty?</li>
+          <li><strong>Photos</strong> — quality images of the business, team, and work</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 7. Backlinks -->
+    <section class="step step--backlinks">
+      <div class="step-marker">
+        <div class="step-number">7</div>
+        <span class="step-altitude">1,000 ft</span>
+      </div>
+      <div class="step-card">
+        <div class="step-label">Authority</div>
+        <h2 class="step-heading">Backlinks</h2>
+        <p class="step-desc">Get a read on the site's authority. Not just the numbers — understand the quality, relevance, and what gaps need filling to compete.</p>
+        <ul class="checkpoints">
+          <li><strong>Current profile</strong> — domain authority, referring domains, quality distribution</li>
+          <li><strong>Top links</strong> — where are the strongest links coming from?</li>
+          <li><strong>Gaps</strong> — what do competitors have that this site doesn't?</li>
+          <li><strong>What's needed</strong> — realistic link targets given the niche and competition</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 8. North Stars -->
+    <section class="step step--northstar">
+      <div class="step-marker">
+        <div class="step-number">8</div>
+        <span class="step-altitude">Ground</span>
+      </div>
+      <div class="step-card">
+        <div class="step-label">Competitive intel</div>
+        <h2 class="step-heading">North Star Sites</h2>
+        <p class="step-desc">Find competitors who rank well for your priority keywords. These are your reference points — reverse-engineer what's working across every area you've already reviewed.</p>
+        <ul class="checkpoints">
+          <li><strong>Identify 2–3 top performers</strong> — sites that consistently show up for target keywords</li>
+          <li><strong>Structure</strong> — how is their site organized? Nav, page hierarchy, URL structure</li>
+          <li><strong>Page quality</strong> — hero sections, templates, copy, trust signals</li>
+          <li><strong>Content</strong> — blog topics, depth, frequency, funnel mapping</li>
+          <li><strong>Links</strong> — internal linking patterns and backlink profile strengths</li>
+          <li><strong>What to steal</strong> — patterns and ideas you can adapt (not copy) for the client</li>
+        </ul>
+        <div class="callout">
+          <strong>These aren't just competitors — they're blueprints.</strong> Run them through the same lens you just applied to the client's site. The gaps become your roadmap.
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="guide-footer">
+    <p>Sixth City Marketing — Strategy Approach Guide</p>
+  </footer>
+
+</body>
+</html>
